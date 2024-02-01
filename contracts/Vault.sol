@@ -7,8 +7,6 @@ import "./interfaces/IWETH.sol";
 contract Vault {
     address public immutable wethAddress;
 
-    mapping(address => uint256) public balances;
-
     mapping(address => mapping(address => uint256)) public tokensBalances;
 
     constructor(address _wethAddress) {
@@ -16,12 +14,12 @@ contract Vault {
     }
 
     function depositETH() public payable {
-        balances[msg.sender] += msg.value;
+        tokensBalances[msg.sender][address(0)] += msg.value;
     }
 
     function withdrawETH(uint256 amount) public {
-        require(balances[msg.sender] >= amount, "Insufficient funds");
-        balances[msg.sender] -= amount;
+        require(tokensBalances[msg.sender][address(0)] >= amount, "Insufficient funds");
+        tokensBalances[msg.sender][address(0)] -= amount;
         payable(msg.sender).transfer(amount);
     }
 
@@ -37,9 +35,9 @@ contract Vault {
     }
 
     function wrapETHtoWETH() public {
-        require(balances[msg.sender] > 0, "Insufficient ETH balance");
-        uint256 amount = balances[msg.sender];
-        balances[msg.sender] = 0;
+        require(tokensBalances[msg.sender][address(0)] > 0, "Insufficient ETH balance");
+        uint256 amount = tokensBalances[msg.sender][address(0)];
+        tokensBalances[msg.sender][address(0)] = 0;
 
         IWETH(wethAddress).deposit{value: amount}();
         tokensBalances[msg.sender][wethAddress] += amount;
@@ -49,10 +47,10 @@ contract Vault {
         require(tokensBalances[msg.sender][wethAddress] > 0, "Insufficient WETH balance");
         uint256 amount = tokensBalances[msg.sender][wethAddress];
         tokensBalances[msg.sender][wethAddress] = 0;
-
         IWETH(wethAddress).withdraw(amount);
-        balances[msg.sender] += amount;
         payable(msg.sender).transfer(amount);
     }
+
+    receive() external payable{}
 
 }
