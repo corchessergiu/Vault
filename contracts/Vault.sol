@@ -47,10 +47,10 @@ contract Vault {
         require(tokensBalances[msg.sender][wethAddress] > 0, "Insufficient WETH balance");
         uint256 amount = tokensBalances[msg.sender][wethAddress];
         tokensBalances[msg.sender][wethAddress] = 0;
+
         IWETH(wethAddress).withdraw(amount);
         payable(msg.sender).transfer(amount);
     }
 
     receive() external payable{}
-
 }
